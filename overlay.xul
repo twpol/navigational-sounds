@@ -1,0 +1,5 @@
+<overlay id="navsoundsOverlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://navsounds/content/hooks.js" />
+
+</overlay>
