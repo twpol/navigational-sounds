@@ -1,25 +1,25 @@
 <?xml version="1.0"?>
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 	<Description about="urn:mozilla:install-manifest">
-		<!-- core data -->
+		<!-- Core data -->
 		<em:id>{d84a846d-f7cb-4187-a408-b171020e8940}</em:id>
-		<em:version>1.0.1</em:version>
+		<em:version>1.0.2</em:version>
 		
-		<!-- target: Mozilla Firefox, version 1.0 to 1.0+ -->
+		<!-- Target: Mozilla Firefox, version 1.0 to 1.6 -->
 		<em:targetApplication>
 			<Description>
 				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
 				<em:minVersion>1.0</em:minVersion>
-				<em:maxVersion>1.0+</em:maxVersion>
+				<em:maxVersion>1.6</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 		
-		<!-- front-end metadata -->
+		<!-- Front-end metadata -->
 		<em:name>Navigational Sounds</em:name>
 		<em:description>A simple extension that plays the Windows OS start and end navigational sounds when pages start and finish loading (i.e. that "click" from IE when you click a link).</em:description>
 		<em:creator>James Ross</em:creator>
 		
-		<!-- package files -->
+		<!-- Package files -->
 		<em:file>
 			<Description about="urn:mozilla:extension:file:navsounds">
 				<em:package>content/</em:package>
