@@ -3,7 +3,7 @@
 	<Description about="urn:mozilla:install-manifest">
 		<!-- core data -->
 		<em:id>{d84a846d-f7cb-4187-a408-b171020e8940}</em:id>
-		<em:version>1.0.0</em:version>
+		<em:version>1.0.1</em:version>
 		
 		<!-- target: Mozilla Firefox, version 1.0 to 1.0+ -->
 		<em:targetApplication>
@@ -16,7 +16,7 @@
 		
 		<!-- front-end metadata -->
 		<em:name>Navigational Sounds</em:name>
-		<em:description>A simple extension that plays the Windows OS start and end navigational sounds at the appropriate points in time.</em:description>
+		<em:description>A simple extension that plays the Windows OS start and end navigational sounds when pages start and finish loading (i.e. that "click" from IE when you click a link).</em:description>
 		<em:creator>James Ross</em:creator>
 		
 		<!-- package files -->

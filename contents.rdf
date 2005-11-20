@@ -9,11 +9,11 @@
 
   <!-- package information -->
   <RDF:Description about="urn:mozilla:package:navsounds"
-        chrome:displayName="Navigational Sounds 1.0"
+        chrome:displayName="Navigational Sounds 1.0.1"
         chrome:author="James Ross"
         chrome:authorURL="http://twpol.dyndns.org/"
-        chrome:description="A simple extension to play Windows navigation sounds when required."
-         chrome:localeVersion="1.8"
+        chrome:description="A simple extension that plays the Windows OS start and end navigational sounds when pages start and finish loading (i.e. that "click" from IE when you click a link)."
+        chrome:localeVersion="1.8"
         chrome:extension="true"
         chrome:name="navsounds">
   </RDF:Description>
