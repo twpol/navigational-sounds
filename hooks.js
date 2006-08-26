@@ -1,47 +1,96 @@
 // Navigational Sounds extension
 //
-// Copyright 2005, James Ross, silver@warwickcompsoc.co.uk
+// Copyright 2005 - 2006, James Ross, silver@warwickcompsoc.co.uk
 //
-
-const nsIWebProgress = Components.interfaces.nsIWebProgress;
-const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
-const nsIWindowsRegKey = Components.interfaces.nsIWindowsRegKey;
-const nsIEnvironment = Components.interfaces.nsIEnvironment;
-const nsISound = Components.interfaces.nsISound;
-const nsIIOService = Components.interfaces.nsIIOService;
-const nsIConsoleService = Components.interfaces.nsIConsoleService;
-const nsILocalFile = Components.interfaces.nsILocalFile;
-const nsISupports = Components.interfaces.nsISupports;
-const nsISupportsWeakReference = Components.interfaces.nsISupportsWeakReference;
-const nsIWindowsShellService = Components.interfaces.nsIWindowsShellService;
-if (nsIWindowsRegKey) {
-	var ROOT_KEY_CURRENT_USER = nsIWindowsRegKey.ROOT_KEY_CURRENT_USER;
-	var ROOT_KEY_LOCAL_MACHINE = nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE;
-} else {
-	ROOT_KEY_CURRENT_USER = nsIWindowsShellService.HKCU;
-	ROOT_KEY_LOCAL_MACHINE = nsIWindowsShellService.HKLM;
-}
-
 
 var navsounds = new Object();
 navsounds.debug = false;
+navsounds.debugDepth = "";
+navsounds.debugLastFn = "";
+
+if (typeof Components.interfaces.nsIWindowsRegKey != "undefined") {
+	navsounds.ROOT_KEY_CURRENT_USER = Components.interfaces.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER;
+	navsounds.ROOT_KEY_LOCAL_MACHINE = Components.interfaces.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE;
+} else {
+	navsounds.ROOT_KEY_CURRENT_USER = Components.interfaces.nsIWindowsShellService.HKCU;
+	navsounds.ROOT_KEY_LOCAL_MACHINE = Components.interfaces.nsIWindowsShellService.HKLM;
+}
+
+navsounds.newObject =
+function _navsounds_newObject(contractID, iface) {
+	navsounds.debugLogEnter("newObject(" + contractID + ", " + iface + ")");
+	try {
+		var rv;
+		var cls = Components.classes[contractID];
+		if (cls) {
+			switch (typeof iface) {
+				case "undefined":
+					rv = cls.createInstance();
+					break;
+				case "string":
+					rv = cls.createInstance(Components.interfaces[iface]);
+					break;
+				case "object":
+					rv = cls.createInstance(iface);
+					break;
+				default:
+					rv = null;
+					break;
+			}
+		}
+	} catch(ex) {
+		navsounds.reportError("navsounds.newObject", ex);
+	}
+	navsounds.debugLogLeave(rv);
+	return rv;
+}
+
+navsounds.getService =
+function _navsounds_getService(contractID, iface) {
+	navsounds.debugLogEnter("getService(" + contractID + ", " + iface + ")");
+	try {
+		var rv;
+		var cls = Components.classes[contractID];
+		if (cls) {
+			switch (typeof iface) {
+				case "undefined":
+					rv = cls.getService();
+					break;
+				case "string":
+					rv = cls.getService(Components.interfaces[iface]);
+					break;
+				case "object":
+					rv = cls.getService(iface);
+					break;
+				default:
+					rv = null;
+					break;
+			}
+		}
+	} catch(ex) {
+		navsounds.reportError("navsounds.getService", ex);
+	}
+	navsounds.debugLogLeave(rv);
+	return rv;
+}
 
 navsounds.init =
 function () {
 	try {
-		navsounds.con = Components.classes["@mozilla.org/consoleservice;1"].getService(nsIConsoleService);
-		navsounds.debugLog("Loading...");
-		navsounds.env = Components.classes["@mozilla.org/process/environment;1"].getService(nsIEnvironment);
-		navsounds.io = Components.classes["@mozilla.org/network/io-service;1"].getService(nsIIOService);
-		navsounds.sound = Components.classes["@mozilla.org/sound;1"].getService(nsISound);
-		navsounds.shell = Components.classes["@mozilla.org/browser/shell-service;1"].getService(nsIWindowsShellService);
+		navsounds.con   = navsounds.getService("@mozilla.org/consoleservice;1", "nsIConsoleService");
+		navsounds.debugLogEnter("navsounds.init");
+		navsounds.env   = navsounds.getService("@mozilla.org/process/environment;1", "nsIEnvironment");
+		navsounds.io    = navsounds.getService("@mozilla.org/network/io-service;1", "nsIIOService");
+		navsounds.sound = navsounds.getService("@mozilla.org/sound;1", "nsISound");
+		navsounds.shell = navsounds.getService("@mozilla.org/browser/shell-service;1", "nsIWindowsShellService");
 		
 		navsounds.handler = new navsounds.BrowserStatusHandler();
 		navsounds.hookedBrowsers = new Array();
 		navsounds.updateProgressListeners();
-		navsounds.debugLog("Done.");
+		getBrowser().mTabBox.addEventListener("DOMContentLoaded", navsounds.browserDOMContentLoaded, true);
+		document.getElementById("content").addEventListener("AlertActive", navsounds.browserAlertEvent, false);
 	} catch(ex) {
-		if (("fileName" in ex) || ("filename" in ex)) {
+		if (ex && (ex.fileName || ex.filename)) {
 			alert("An error occured initialising Navigational Sounds.\n\n" +
 					"Name: " + ex.name + "\n" +
 					"Messages: " + ex.message + "\n" +
@@ -54,19 +103,50 @@ function () {
 			navsounds.log("navsounds.init: ERROR: " + ex);
 		}
 	}
-}
-
-navsounds.debugLog =
-function (message) {
-	if (navsounds.debug && navsounds.con) {
-		navsounds.con.logStringMessage(message);
-	}
+	navsounds.debugLogLeave("");
 }
 
 navsounds.log =
 function (message) {
 	if (navsounds.con) {
-		navsounds.con.logStringMessage(message);
+		if (navsounds.debugLastFn) {
+			navsounds.con.logStringMessage(navsounds.debugLastFn);
+			navsounds.debugLastFn = "";
+		}
+		navsounds.con.logStringMessage(navsounds.debugDepth + message);
+	}
+}
+
+navsounds.debugLog =
+function (message) {
+	if (navsounds.debug && navsounds.con) {
+		navsounds.log(message);
+	}
+}
+
+navsounds.debugLogEnter =
+function (message) {
+	if (navsounds.debug && navsounds.con) {
+		if (navsounds.debugLastFn) {
+			navsounds.con.logStringMessage(navsounds.debugLastFn);
+		}
+		navsounds.debugLastFn = navsounds.debugDepth + message + " {";
+		navsounds.debugDepth += "  ";
+	}
+}
+
+navsounds.debugLogLeave =
+function (message) {
+	if (navsounds.debug && navsounds.con) {
+		if (navsounds.debugDepth.length >= 2) {
+			navsounds.debugDepth = navsounds.debugDepth.substr(2);
+		}
+		if (navsounds.debugLastFn) {
+			navsounds.con.logStringMessage(navsounds.debugLastFn + "} " + message);
+			navsounds.debugLastFn = "";
+		} else {
+			navsounds.log("} " + message);
+		}
 	}
 }
 
@@ -85,17 +165,17 @@ function (source, ex) {
 
 navsounds.getRegKey =
 function (root, path, value, ignoreError) {
+	var data = "";
+	navsounds.debugLogEnter("getRegKey(" + root + ", " + path + ", " + value + ")");
 	try {
-		navsounds.debugLog("getRegKey(" + root + ", " + path + ", " + value + ")");
 		
 		var type = -1;
-		var data = "";
 		if ("@mozilla.org/windows-registry-key;1" in Components.classes) {
 			// Create a key object to do the work.
-			var key = Components.classes["@mozilla.org/windows-registry-key;1"].createInstance(nsIWindowsRegKey);
+			var key = navsounds.newObject("@mozilla.org/windows-registry-key;1", "nsIWindowsRegKey");
 			
 			// Open for reading only, and get the value before closing it.
-			key.open(root, path, nsIWindowsRegKey.ACCESS_READ);
+			key.open(root, path, Components.interfaces.nsIWindowsRegKey.ACCESS_READ);
 			if (key.hasValue(value)) {
 				type = key.getValueType(value);
 				data = key.readStringValue(value);
@@ -108,6 +188,7 @@ function (root, path, value, ignoreError) {
 		}
 		
 		if (type == 2) {
+			//navsounds.debugLog("Raw value = " + data);
 			// REG_EXPAND_SZ
 			var ary;
 			while ((ary = data.match(/(.*)%(.*?)%(.*)/))) {
@@ -115,37 +196,30 @@ function (root, path, value, ignoreError) {
 			}
 			
 		}
-		navsounds.debugLog("  Data: " + data);
-		
-		return data;
 	} catch(ex) {
+		data = "";
 		if (!ignoreError || navsounds.debug) {
 			navsounds.reportError("navsounds.getRegKey", ex);
 		}
 	}
-	return "";
+	navsounds.debugLogLeave((data ? "= " + data : ""));
+	return data;
 }
 
 navsounds.getSystemSound =
 function (app, name, ignoreError) {
+	var file = "";
+	navsounds.debugLogEnter("getSystemSound(" + app + ", " + name + ")");
 	try {
-		navsounds.debugLog("getSystemSound(" + app + ", " + name + ")");
 		// Extract correct key to read...
 		var loc = "AppEvents\\Schemes\\Apps\\" + app + "\\" + name + "\\.Current";
-		var file = navsounds.getRegKey(ROOT_KEY_CURRENT_USER, loc, "", ignoreError);
-		if (!file) {
-			if (navsounds.debug) {
-				navsounds.reportError("navsounds.getSystemSound", "reading sound event " + app + "\\" + name + " failed. No value was returned.");
-			}
-			return "";
-		}
-		navsounds.debugLog("  Value: " + file);
-		
-		return file;
+		file = navsounds.getRegKey(navsounds.ROOT_KEY_CURRENT_USER, loc, "", ignoreError);
 	} catch(ex) {
+		file = "";
 		navsounds.reportError("navsounds.getSystemSound", ex);
 	}
-	return "";
+	navsounds.debugLogLeave((file ? "= " + file : ""));
+	return file;
 }
 
 navsounds.playSound =
@@ -153,24 +227,24 @@ function (filepath) {
 	if (!filepath) {
 		return;
 	}
+	navsounds.debugLogEnter("playSound(" + filepath + ")");
 	try {
-		navsounds.debugLog("playSound(" + filepath + ")");
 		var uri, fileurl;
 		if ((filepath.substr(0, 2) == "\\\\") || (filepath.substr(1, 1) == ":")) {
 			// UNC or local path, it seems - just turn into a URL.
-			navsounds.debugLog("  UNC or local absolute path");
+			navsounds.debugLog("Path type = UNC or local absolute");
 			fileurl = "file:///" + filepath.replace(/\\/g, "/");
 			uri = navsounds.io.newURI(fileurl, "UTF-8", null);
 		} else {
 			// Relative? Oh boy!
-			navsounds.debugLog("  Relative path");
+			navsounds.debugLog("Path type = Relative");
 			// Try looking for it as a .Default scheme entry.
 			var redirectedPath = navsounds.getSystemSound(".Default", filepath, true);
 			if (!redirectedPath) {
 				// Get the media folder (for our search path).
-				var mediaPath = navsounds.getRegKey(ROOT_KEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", "MediaPath");
+				var mediaPath = navsounds.getRegKey(navsounds.ROOT_KEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", "MediaPath");
 				if (!mediaPath) {
-					mediaPath = navsounds.getRegKey(ROOT_KEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", "MediaPathUnexpanded");
+					mediaPath = navsounds.getRegKey(navsounds.ROOT_KEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", "MediaPathUnexpanded");
 				}
 				// Construct a list of paths to search.
 				var paths = new Array();
@@ -181,13 +255,14 @@ function (filepath) {
 				}
 				
 				function tryFolder(path) {
-					navsounds.debugLog("  tryFolder(" + path + ")");
-					var tryFile = Components.classes["@mozilla.org/file/local;1"].createInstance(nsILocalFile);
+					navsounds.debugLogEnter("tryFolder(" + path + ")");
+					var tryFile = navsounds.newObject("@mozilla.org/file/local;1", "nsILocalFile");
 					tryFile.initWithPath(path + filepath);
 					if (tryFile.exists()) {
 						fileurl = "file:///" + path.replace(/\\/g, "/") + filepath.replace(/\\/g, "/");
 						uri = navsounds.io.newURI(fileurl, "UTF-8", null);;
 					}
+					navsounds.debugLogLeave((tryFile.exists() ? "true":"false"));
 				}
 				
 				while (!uri && (paths.length > 0)) {
@@ -196,7 +271,7 @@ function (filepath) {
 			}
 		}
 		if (uri) {
-			navsounds.debugLog("  Final URI: " + uri.spec);
+			navsounds.debugLog("URI = " + uri.spec);
 			navsounds.sound.play(uri);
 		} else {
 			navsounds.log("navsounds.playSound: couldn't find sound file specified: '" + filepath + "'.");
@@ -204,6 +279,7 @@ function (filepath) {
 	} catch(ex) {
 		navsounds.reportError("navsounds.playSound", ex);
 	}
+	navsounds.debugLogLeave("");
 }
 
 navsounds.updateProgressListeners =
@@ -263,9 +339,10 @@ function () {
 			}
 			var item = { browser: browserList[i],
 			             webProgress: browserList[i].webProgress,
+			             loading: false,
 			             dead: false };
 			hookedBrowsers.push(item);
-			browserList[i].webProgress.addProgressListener(navsounds.handler, nsIWebProgress.NOTIFY_ALL);
+			browserList[i].webProgress.addProgressListener(navsounds.handler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 			changed = true;
 		}
 		if (changed) {
@@ -285,9 +362,9 @@ function () {
 
 navsounds.BrowserStatusHandler.prototype.QueryInterface =
 function (iid) {
-	if (iid.equals(nsIWebProgressListener) ||
-			iid.equals(nsISupportsWeakReference) ||
-			iid.equals(nsISupports)) {
+	if (iid.equals(Components.interfaces.nsIWebProgressListener) ||
+			iid.equals(Components.interfaces.nsISupportsWeakReference) ||
+			iid.equals(Components.interfaces.nsISupports)) {
 		return this;
 	}
 	throw Components.results.NS_NOINTERFACE;
@@ -296,16 +373,15 @@ function (iid) {
 navsounds.BrowserStatusHandler.prototype.onStateChange =
 function (webProgress, request, stateFlags, status) {
 	try {
-		if (!(stateFlags & nsIWebProgressListener.STATE_IS_NETWORK)) {
+		if (!(stateFlags & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK)) {
 			return;
 		}
-		if (stateFlags & nsIWebProgressListener.STATE_START) {
-			// Request started.
-			navsounds.playSound(navsounds.getSystemSound("Explorer", "Navigating"));
-		} else if (stateFlags & nsIWebProgressListener.STATE_STOP) {
-			if (request) {
-				// Request ended.
-				navsounds.playSound(navsounds.getSystemSound("Explorer", "ActivatingDocument"));
+		if (stateFlags & Components.interfaces.nsIWebProgressListener.STATE_START) {
+			var hb = navsounds.getHookedBrowser(webProgress.document);
+			if (hb) {
+				// Request started.
+				hb.loading = true;
+				navsounds.playSound(navsounds.getSystemSound("Explorer", "Navigating"));
 			}
 		}
 	} catch(ex) {
@@ -319,6 +395,52 @@ navsounds.BrowserStatusHandler.prototype.onProgressChange =
 navsounds.BrowserStatusHandler.prototype.onSecurityChange =
 function()
 {}
+
+navsounds.getHookedBrowser =
+function (doc) {
+	try {
+		var hookedBrowsers = navsounds.hookedBrowsers;
+		
+		var liveBrowserList = getBrowser().browsers;
+		for (var i = 0; i < liveBrowserList.length; i++) {
+			if (liveBrowserList[i].contentDocument == doc) {
+				for (var j = 0; j < hookedBrowsers.length; j++) {
+					if (hookedBrowsers[j].browser == liveBrowserList[i]) {
+						return hookedBrowsers[j];
+					}
+				}
+				break;
+			}
+		}
+	} catch(ex) {
+		navsounds.reportError("navsounds.getHookedBrowser", ex);
+	}
+	return null;
+}
+
+navsounds.browserDOMContentLoaded =
+function (e) {
+	try {
+		var hb = navsounds.getHookedBrowser(e.target);
+		if (hb && hb.loading) {
+			// Request ended.
+			hb.loading = false;
+			navsounds.playSound(navsounds.getSystemSound("Explorer", "ActivatingDocument"));
+		}
+	} catch(ex) {
+		navsounds.reportError("navsounds.browserDOMContentLoaded", ex);
+	}
+}
+
+navsounds.browserAlertEvent =
+function (e) {
+	try {
+		// Information Bar appeared.
+		navsounds.playSound(navsounds.getSystemSound("Explorer", "SecurityBand"));
+	} catch(ex) {
+		navsounds.reportError("navsounds.browserAlertEvent", ex);
+	}
+}
 
 
 setTimeout(navsounds.init, 0);
