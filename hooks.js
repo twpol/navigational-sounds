@@ -171,7 +171,7 @@ function _navsounds_reportError(source, ex) {
 navsounds.getRegKey =
 function _navsounds_getRegKey(root, path, value, ignoreError) {
 	var data = "";
-	navsounds.debugLogEnter("getRegKey(" + root + ", " + path + ", " + value + ")");
+	navsounds.debugLogEnter("getRegKey(0x" + Number(root).toString(16) + ", " + path + ", " + value + ")");
 	try {
 		
 		var type = -1;
@@ -323,8 +323,25 @@ function (iid) {
 
 navsounds.BrowserStatusHandler.prototype.onStateChange =
 function (webProgress, request, stateFlags, status) {
+	navsounds.debugLogEnter("onStateChange(" + webProgress + ", " + request + ", 0x" + Number(stateFlags).toString(16) + ", 0x" + Number(status).toString(16) + ")");
 	try {
+		if (navsounds.debug) {
+			var flags = new Array();
+			var flagNames = [
+					"STATE_START", "STATE_STOP",
+					"STATE_REDIRECTING", "STATE_TRANSFERING", "STATE_NEGOTIATING",
+					"STATE_IS_REQUEST", "STATE_IS_DOCUMENT", "STATE_IS_NETWORK", "STATE_IS_WINDOW"
+				];
+			for (var i = 0; i < flagNames.length; i++) {
+				if ((stateFlags & Components.interfaces.nsIWebProgressListener[flagNames[i]]) != 0) {
+					flags.push(flagNames[i].substr(6));
+				}
+			}
+			navsounds.debugLog("stateFlags = " + flags.join(", "));
+		}
+		
 		if (!(stateFlags & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK)) {
+			navsounds.debugLogLeave("");
 			return;
 		}
 		if (stateFlags & Components.interfaces.nsIWebProgressListener.STATE_START) {
@@ -333,10 +350,16 @@ function (webProgress, request, stateFlags, status) {
 				tab.loading = true;
 				navsounds.playSound(navsounds.getSystemSound("Explorer", "Navigating"));
 			}
+		} else if (stateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP) {
+			var tab = navsounds.getBrowserTab(webProgress.document);
+			if (tab && tab.loading) {
+				tab.loading = false;
+			}
 		}
 	} catch(ex) {
 		navsounds.reportError("navsounds.BrowserStatusHandler.onStateChange", ex);
 	}
+	navsounds.debugLogLeave("");
 }
 
 navsounds.BrowserStatusHandler.prototype.onStatusChange =
