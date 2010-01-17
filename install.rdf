@@ -3,21 +3,24 @@
 	<Description about="urn:mozilla:install-manifest">
 		<!-- Core data -->
 		<em:id>{d84a846d-f7cb-4187-a408-b171020e8940}</em:id>
-		<em:version>1.1.1</em:version>
+		<em:version>1.2.0</em:version>
 		
-		<!-- Target: Mozilla Firefox, version 1.5 to 3.1 -->
+		<!-- Target: Mozilla Firefox, version 3.0 to 3.5 -->
 		<em:targetApplication>
 			<Description>
 				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-				<em:minVersion>1.5</em:minVersion>
-				<em:maxVersion>3.1</em:maxVersion>
+				<em:minVersion>3.0</em:minVersion>
+				<em:maxVersion>3.5.*</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 		
 		<!-- Front-end metadata -->
 		<em:name>Navigational Sounds</em:name>
-		<em:description>A simple extension that plays the Windows OS start and end navigational sounds when pages start and finish loading (i.e. that "click" from IE when you click a link).</em:description>
+		<em:description>A simple extension that plays the Windows Internet Explorer start and end navigation sounds, popup blocked and information bar sounds, feed and search provider discovered sounds, and download completed sound.</em:description>
 		<em:creator>James Ross</em:creator>
+		
+		<!-- Entry points -->
+		<em:optionsURL>chrome://navsounds/content/prefs.xul</em:optionsURL>
 		
 		<!-- Package files -->
 		<em:file>

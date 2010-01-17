@@ -1,9 +1,11 @@
 NAME Navigation Sounds
-VERSION 1.1.1
+VERSION 1.2.0
 XPI NavigationSounds
 FILE chrome.manifest /
-FILE install.rdf /
-FILE contents.rdf /chrome/navsounds/content/
-FILE overlay.xul /chrome/navsounds/content/
-FILE hooks.js /chrome/navsounds/content/
+FILE install.rdf     /
+FILE overlay.xul     /chrome/navsounds/content/
+FILE hooks.js        /chrome/navsounds/content/
+FILE prefs.xul       /chrome/navsounds/content/
+FILE prefs.js        /chrome/navsounds/content/
+FILE pref-defs.js    /defaults/preferences/
 END
