@@ -446,10 +446,12 @@ navsounds.browserAlertActive =
 function _navsounds_browserAlertActive(e) {
 	navsounds.debugLogEnter("browserAlertActive()");
 	try {
-		// Information Bar appeared.
-		if (!navsounds.blockedPopup) {
-			if (navsounds.prefs.getValue("event.information-bar", null)) {
-				navsounds.playSound(navsounds.getSystemSound("Explorer", "SecurityBand"));
+		if (e.target && (e.target.localName == "tabbrowser")) {
+			// Information Bar appeared.
+			if (!navsounds.blockedPopup) {
+				if (navsounds.prefs.getValue("event.information-bar", null)) {
+					navsounds.playSound(navsounds.getSystemSound("Explorer", "SecurityBand"));
+				}
 			}
 		}
 	} catch(ex) {
