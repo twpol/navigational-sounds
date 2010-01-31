@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<prefwindow id="navsoundsPrefWindow" title="Navigational Sounds Preferences" xstyle="width: 30em; height: 25em;" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/x-javascript" src="chrome://navsounds/content/hooks.js" />
+  <script type="application/x-javascript" src="chrome://navsounds/content/prefs.js" />
+  <prefpane>
+    <preferences>
+      <preference id="event.navigation-start" name="extensions.{d84a846d-f7cb-4187-a408-b171020e8940}.event.navigation-start" type="bool"/>
+      <preference id="event.navigation-complete" name="extensions.{d84a846d-f7cb-4187-a408-b171020e8940}.event.navigation-complete" type="bool"/>
+      <preference id="event.block-popup" name="extensions.{d84a846d-f7cb-4187-a408-b171020e8940}.event.block-popup" type="bool"/>
+      <preference id="event.information-bar" name="extensions.{d84a846d-f7cb-4187-a408-b171020e8940}.event.information-bar" type="bool"/>
+      <preference id="event.discover-feed" name="extensions.{d84a846d-f7cb-4187-a408-b171020e8940}.event.discover-feed" type="bool"/>
+      <preference id="event.discover-search-provider" name="extensions.{d84a846d-f7cb-4187-a408-b171020e8940}.event.discover-search-provider" type="bool"/>
+      <preference id="event.download-complete" name="extensions.{d84a846d-f7cb-4187-a408-b171020e8940}.event.download-complete" type="bool"/>
+      <preference id="event.download-complete.only-last" name="extensions.{d84a846d-f7cb-4187-a408-b171020e8940}.event.download-complete.only-last" type="bool"/>
+    </preferences>
+    <label value="Play Windows Sounds for:"/>
+    <grid>
+      <columns>
+        <column/>
+        <column/>
+      </columns>
+      <rows>
+        <row>
+          <checkbox preference="event.navigation-start" label="Start Navigation"/>
+          <button label="Test" class="sound-test" sound-app="Explorer" sound-name="Navigating"/>
+        </row>
+        <row>
+          <checkbox preference="event.navigation-complete" label="Complete Navigation"/>
+          <button label="Test" class="sound-test" sound-app="Explorer" sound-name="ActivatingDocument"/>
+        </row>
+        <row>
+          <checkbox preference="event.block-popup" label="Blocked Pop-up Window"/>
+          <button label="Test" class="sound-test" sound-app="Explorer" sound-name="BlockedPopup"/>
+        </row>
+        <row>
+          <checkbox preference="event.information-bar" label="Information Bar"/>
+          <button label="Test" class="sound-test" sound-app="Explorer" sound-name="SecurityBand"/>
+        </row>
+        <row>
+          <checkbox preference="event.discover-feed" label="Feed Discovered"/>
+          <button label="Test" class="sound-test" sound-app="Explorer" sound-name="FeedDiscovered"/>
+        </row>
+        <row>
+          <checkbox preference="event.discover-search-provider" label="Search Provider Discovered"/>
+          <button label="Test" class="sound-test" sound-app="Explorer" sound-name="SearchProviderDiscovered"/>
+        </row>
+        <row>
+          <checkbox preference="event.download-complete" label="Download Completed"/>
+          <button label="Test" class="sound-test" sound-app=".Default" sound-name="SystemAsterisk"/>
+        </row>
+        <row>
+          <checkbox preference="event.download-complete.only-last" label="Only last active download" style="margin-left: 2em;"/>
+        </row>
+      </rows>
+    </grid>
+  </prefpane>
+</prefwindow>
