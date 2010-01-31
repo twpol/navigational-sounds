@@ -1,6 +1,6 @@
 // Navigational Sounds extension
 //
-// Copyright 2005, 2006, 2009, James Ross <silver@warwickcompsoc.co.uk>
+// Copyright 2005, 2006, 2009, 2010, James Ross <silver@warwickcompsoc.co.uk>
 //
 // Sound events:                Registry keys:
 //   Start Navigation:            Explorer\Navigating
@@ -20,7 +20,6 @@ navsounds.id = "{d84a846d-f7cb-4187-a408-b171020e8940}";
 
 navsounds.ROOT_KEY_CURRENT_USER = Components.interfaces.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER;
 navsounds.ROOT_KEY_LOCAL_MACHINE = Components.interfaces.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE;
-navsounds.DOWNLOAD_SCANNING = Components.interfaces.nsIDownloadManager.DOWNLOAD_SCANNING;
 navsounds.DOWNLOAD_FINISHED = Components.interfaces.nsIDownloadManager.DOWNLOAD_FINISHED;
 
 navsounds.newObject =
@@ -381,13 +380,10 @@ function _navsounds_dlm() {
 }
 
 navsounds.DownloadManagerListener.prototype.onDownloadStateChange =
-function _navsounds_dlm_onDownloadStateChange(state, download) {
-	navsounds.debugLogEnter("onDownloadStateChange(" + state + ", " + download + ")");
+function _navsounds_dlm_onDownloadStateChange(oldState, download) {
+	navsounds.debugLogEnter("onDownloadStateChange(" + oldState + " => " + download.state + ")");
 	try {
-		// XXX Firefox 3.0: Download Manager notifies about scanning but
-		// surreptitiously changes the internal state to finished, so we'll
-		// never get a finished notification if it is scanning. Sigh.
-		if ((state == navsounds.DOWNLOAD_SCANNING) || (state == navsounds.DOWNLOAD_FINISHED)) {
+		if (download.state == navsounds.DOWNLOAD_FINISHED) {
 			if (navsounds.prefs.getValue("event.download-complete", null)) {
 				if (navsounds.prefs.getValue("event.download-complete.only-last", null)) {
 					if (navsounds.dlm.activeDownloadCount > 0) {
