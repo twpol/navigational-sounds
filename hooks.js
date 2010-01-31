@@ -292,8 +292,8 @@ function _navsounds_getBrowserTab(document) {
 	navsounds.debugLogEnter("getBrowserTab(" + document + ")");
 	try {
 		var rv = null;
-		while (document.defaultView.parent && (document.defaultView.parent != document.defaultView)) {
-			document = document.defaultView.parent.document;
+		if (document.defaultView.top != document.defaultView) {
+			document = document.defaultView.top.document;
 		}
 		var url = document.location.href;
 		var tabBrowser = getBrowser();
