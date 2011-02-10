@@ -13,7 +13,7 @@
 
 
 var navsounds = new Object();
-navsounds.debug = true;
+navsounds.debug = false;
 navsounds.debugDepth = "";
 navsounds.debugLastFn = "";
 navsounds.id = "{d84a846d-f7cb-4187-a408-b171020e8940}";
@@ -85,37 +85,44 @@ function _navsounds_init() {
 	navsounds.debugLogEnter("init()");
 	try {
 		window.removeEventListener("load", navsounds.init, false);
-		navsounds.prefs = Application.extensions.get(navsounds.id).prefs;
+		// Firefox 4.0 made this data async.
+		if (typeof Application.getExtensions == "function") {
+			Application.getExtensions(function(extensions){
+				navsounds.initComplete(extensions);
+			});
+		} else {
+			navsounds.initComplete(Application.extensions);
+		}
+	} catch(ex) {
+		navsounds.reportError("navsounds.init", ex);
+	}
+	navsounds.debugLogLeave();
+}
+
+navsounds.initComplete =
+function _navsounds_initComplete(extensions) {
+	navsounds.debugLogEnter("initComplete(" + extensions + ")");
+	try {
+		navsounds.prefs = extensions.get(navsounds.id).prefs;
 		navsounds.env   = navsounds.getService("@mozilla.org/process/environment;1", "nsIEnvironment");
 		navsounds.io    = navsounds.getService("@mozilla.org/network/io-service;1", "nsIIOService");
 		navsounds.dlm   = navsounds.getService("@mozilla.org/download-manager;1", "nsIDownloadManager");
 		navsounds.sound = navsounds.getService("@mozilla.org/sound;1", "nsISound");
 		if (typeof getBrowser == "function") {
-			navsounds.initEvents();
+			navsounds.bsHandler = new navsounds.BrowserStatusHandler();
+			navsounds.dlmHandler = new navsounds.DownloadManagerListener();
+			navsounds.blockedPopup = false;
+			var tabBrowser = getBrowser();
+			tabBrowser.addProgressListener(navsounds.bsHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+			tabBrowser.addEventListener("DOMContentLoaded", navsounds.browserDOMContentLoaded, true);
+			tabBrowser.addEventListener("DOMPopupBlocked", navsounds.browserDOMPopupBlocked, true);
+			tabBrowser.addEventListener("AlertActive", navsounds.browserAlertActive, true);
+			tabBrowser.addEventListener("TabSelect", navsounds.browserTabSelect, true);
+			tabBrowser.addEventListener("pageshow", navsounds.browserPageShow, true);
+			navsounds.dlm.addListener(navsounds.dlmHandler);
 		}
 	} catch(ex) {
-		navsounds.reportError("navsounds.initEvents", ex);
-	}
-	navsounds.debugLogLeave();
-}
-
-navsounds.initEvents =
-function _navsounds_initEvents() {
-	navsounds.debugLogEnter("initEvents()");
-	try {
-		navsounds.bsHandler = new navsounds.BrowserStatusHandler();
-		navsounds.dlmHandler = new navsounds.DownloadManagerListener();
-		navsounds.blockedPopup = false;
-		var tabBrowser = getBrowser();
-		tabBrowser.addProgressListener(navsounds.bsHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-		tabBrowser.addEventListener("DOMContentLoaded", navsounds.browserDOMContentLoaded, true);
-		tabBrowser.addEventListener("DOMPopupBlocked", navsounds.browserDOMPopupBlocked, true);
-		tabBrowser.addEventListener("AlertActive", navsounds.browserAlertActive, true);
-		tabBrowser.addEventListener("TabSelect", navsounds.browserTabSelect, true);
-		tabBrowser.addEventListener("pageshow", navsounds.browserPageShow, true);
-		navsounds.dlm.addListener(navsounds.dlmHandler);
-	} catch(ex) {
-		navsounds.reportError("navsounds.initEvents", ex);
+		navsounds.reportError("navsounds.initComplete", ex);
 	}
 	navsounds.debugLogLeave();
 }
