@@ -1,6 +1,7 @@
-// Navigational Sounds extension
-//
-// Copyright 2005, 2006, 2009, 2010, James Ross <silver@warwickcompsoc.co.uk>
+//------------------------------------------------------------------------------
+// Navigational Sounds extension (http://twpol.dyndns.org/projects/navsounds/).
+// License: New BSD License (BSD).
+//------------------------------------------------------------------------------
 //
 // Sound events:                Registry keys:
 //   Start Navigation:            Explorer\Navigating

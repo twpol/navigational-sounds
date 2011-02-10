@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
+<!--------------------------------------------------------------------------------
+	 Navigational Sounds extension (http://twpol.dyndns.org/projects/navsounds/).
+	 License: New BSD License (BSD).
+	-------------------------------------------------------------------------------->
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 	<Description about="urn:mozilla:install-manifest">
 		<!-- Core data -->

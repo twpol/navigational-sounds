@@ -1,3 +1,8 @@
+//------------------------------------------------------------------------------
+// Navigational Sounds extension (http://twpol.dyndns.org/projects/navsounds/).
+// License: New BSD License (BSD).
+//------------------------------------------------------------------------------
+
 function loadEvent() {
 	window.removeEventListener("load", setupTestButtons, false);
 	setupTestButtons();

@@ -1,3 +1,8 @@
+//------------------------------------------------------------------------------
+// Navigational Sounds extension (http://twpol.dyndns.org/projects/navsounds/).
+// License: New BSD License (BSD).
+//------------------------------------------------------------------------------
+
 // Start Navigation:
 pref("extensions.{d84a846d-f7cb-4187-a408-b171020e8940}.event.navigation-start", true);
 
