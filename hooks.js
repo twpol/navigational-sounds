@@ -350,9 +350,12 @@ function _navsounds_bsh_onStateChange(webProgress, request, stateFlags, status) 
 				}
 			}
 			navsounds.debugLog("stateFlags = " + flags.join(", "));
+			navsounds.debugLog("request.name = " + request.name);
 		}
-		
-		if (!(stateFlags & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK)) {
+		// We're not interested unless it is network (start/end of window's activity)
+		// and we're especially not interested in about:blank and wyciwyg: URIs.
+		if (!(stateFlags & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK) ||
+				/^about:blank$|^wyciwyg:/.test(request.name)) {
 			navsounds.debugLogLeave();
 			return;
 		}
