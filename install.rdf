@@ -7,7 +7,7 @@
 	<Description about="urn:mozilla:install-manifest">
 		<!-- Core data -->
 		<em:id>{d84a846d-f7cb-4187-a408-b171020e8940}</em:id>
-		<em:version>1.2.3</em:version>
+		<em:version>1.2.4</em:version>
 		
 		<!-- Target: Mozilla Firefox, version 3.0 to 26.0 -->
 		<em:targetApplication>
