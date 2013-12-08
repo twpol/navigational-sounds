@@ -2,22 +2,25 @@
 // Navigational Sounds extension (http://twpol.dyndns.org/projects/navsounds/).
 // License: New BSD License (BSD).
 //------------------------------------------------------------------------------
-//
-// Sound events:                Registry keys:
-//   Start Navigation:            Explorer\Navigating
-//   Complete Navigation:         Explorer\ActivatingDocument
-//   Blocked Pop-up Window:       Explorer\BlockedPopup
-//   Information Bar:             Explorer\SecurityBand
-//   Feed Discovered:             Explorer\FeedDiscovered
-//   Search Provider Discovered:  Explorer\SearchProviderDiscovered
-//   Complete Download:           .Default\SystemAsterisk
 
 
 var navsounds = new Object();
-navsounds.debug = true;
+navsounds.debug = false;
 navsounds.debugDepth = "";
 navsounds.debugLastFn = "";
 navsounds.id = "{d84a846d-f7cb-4187-a408-b171020e8940}";
+
+// Mapping from event/preference name to registry key.
+navsounds.events = {
+	"navigation-start":         ["Explorer", "Navigating"],
+	"navigation-complete":      ["Explorer", "ActivatingDocument"],
+	"block-popup":              ["Explorer", "BlockedPopup"],
+	"information-bar":          ["Explorer", "SecurityBand"],
+	"discover-feed":            ["Explorer", "FeedDiscovered"],
+	"discover-search-provider": ["Explorer", "SearchProviderDiscovered"],
+	"download-complete":        [".Default", "SystemAsterisk"],
+};
+
 
 navsounds.ROOT_KEY_CURRENT_USER = Components.interfaces.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER;
 navsounds.ROOT_KEY_LOCAL_MACHINE = Components.interfaces.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE;
@@ -311,6 +314,20 @@ function _navsounds_playSound(filepath) {
 	navsounds.debugLogLeave();
 }
 
+navsounds.playEvent =
+function _navsounds_playEvent(event) {
+	navsounds.debugLogEnter("playEvent(" + event + ")");
+	try {
+		if (navsounds.prefs.getValue("event." + event, null)) {
+			var custom = navsounds.prefs.getValue("event." + event + ".custom", null);
+			navsounds.playSound(custom || navsounds.getSystemSound(navsounds.events[event][0], navsounds.events[event][1]));
+		}
+	} catch(ex) {
+		navsounds.reportError("navsounds.playEvent", ex);
+	}
+	navsounds.debugLogLeave();
+}
+
 navsounds.getBrowserTab =
 function _navsounds_getBrowserTab(document) {
 	navsounds.debugLogEnter("getBrowserTab(" + document + ")");
@@ -379,9 +396,7 @@ function _navsounds_bsh_onStateChange(webProgress, request, stateFlags, status) 
 			var tab = navsounds.getBrowserTab(webProgress.DOMWindow.document);
 			if (tab && !tab._navsounds_loading) {
 				tab._navsounds_loading = true;
-				if (navsounds.prefs.getValue("event.navigation-start", null)) {
-					navsounds.playSound(navsounds.getSystemSound("Explorer", "Navigating"));
-				}
+				navsounds.playEvent("navigation-start");
 			}
 		} else if (stateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP) {
 			var tab = navsounds.getBrowserTab(webProgress.DOMWindow.document);
@@ -412,21 +427,19 @@ function _navsounds_dlm_onDownloadChanged(download) {
 	navsounds.debugLogEnter("onDownloadChanged(" + download.succeeded + ")");
 	try {
 		if (download.succeeded) {
-			if (navsounds.prefs.getValue("event.download-complete", null)) {
-				navsounds.dlm.getList(navsounds.dlm.ALL).then(function _navsounds_dlm_onDownloadChanged_getList(list) {
-					return list.getAll();
-				}).then(function _navsounds_dlm_onDownloadChanged_getAll(list) {
-					var running = 0;
-					for (var i = 0; i < list.length; i++) {
-						if (!list[i].stopped) {
-							running++;
-						}
+			navsounds.dlm.getList(navsounds.dlm.ALL).then(function _navsounds_dlm_onDownloadChanged_getList(list) {
+				return list.getAll();
+			}).then(function _navsounds_dlm_onDownloadChanged_getAll(list) {
+				var running = 0;
+				for (var i = 0; i < list.length; i++) {
+					if (!list[i].stopped) {
+						running++;
 					}
-					if (!navsounds.prefs.getValue("event.download-complete.only-last", null) || running == 0) {
-						navsounds.playSound(navsounds.getSystemSound(".Default", "SystemAsterisk"));
-					}
-				}).then(null, Components.utils.reportError);
-			}
+				}
+				if (!navsounds.prefs.getValue("event.download-complete.only-last", null) || running == 0) {
+					navsounds.playEvent("download-complete");
+				}
+			}).then(null, Components.utils.reportError);
 		}
 	} catch(ex) {
 		navsounds.reportError("navsounds.DownloadManagerListener.onDownloadChanged", ex);
@@ -440,15 +453,13 @@ function _navsounds_dlm_onDownloadStateChange(oldState, download) {
 	navsounds.debugLogEnter("onDownloadStateChange(" + oldState + " => " + download.state + ")");
 	try {
 		if (download.state == navsounds.DOWNLOAD_FINISHED) {
-			if (navsounds.prefs.getValue("event.download-complete", null)) {
-				if (navsounds.prefs.getValue("event.download-complete.only-last", null)) {
-					if (navsounds.dlm.activeDownloadCount > 0) {
-						navsounds.debugLogLeave();
-						return;
-					}
+			if (navsounds.prefs.getValue("event.download-complete.only-last", null)) {
+				if (navsounds.dlm.activeDownloadCount > 0) {
+					navsounds.debugLogLeave();
+					return;
 				}
-				navsounds.playSound(navsounds.getSystemSound(".Default", "SystemAsterisk"));
 			}
+			navsounds.playEvent("download-complete");
 		}
 	} catch(ex) {
 		navsounds.reportError("navsounds.DownloadManagerListener.onDownloadStateChange", ex);
@@ -473,9 +484,7 @@ function _navsounds_browserDOMContentLoaded(e) {
 		var tab = navsounds.getBrowserTab(e.target);
 		if (tab && tab._navsounds_loading) {
 			tab._navsounds_loading = false;
-			if (navsounds.prefs.getValue("event.navigation-complete", null)) {
-				navsounds.playSound(navsounds.getSystemSound("Explorer", "ActivatingDocument"));
-			}
+			navsounds.playEvent("navigation-complete");
 		}
 	} catch(ex) {
 		navsounds.reportError("navsounds.browserDOMContentLoaded", ex);
@@ -492,9 +501,7 @@ function _navsounds_browserDOMPopupBlocked(e) {
 		navsounds.blockedPopup = true;
 		setTimeout(function() { navsounds.blockedPopup = false }, 0);
 		// Popup was blocked.
-		if (navsounds.prefs.getValue("event.block-popup", null)) {
-			navsounds.playSound(navsounds.getSystemSound("Explorer", "BlockedPopup"));
-		}
+		navsounds.playEvent("block-popup");
 	} catch(ex) {
 		navsounds.reportError("navsounds.browserDOMPopupBlocked", ex);
 	}
@@ -508,9 +515,7 @@ function _navsounds_browserAlertActive(e) {
 		if (e.target && (e.target.localName == "tabbrowser")) {
 			// Information Bar appeared.
 			if (!navsounds.blockedPopup) {
-				if (navsounds.prefs.getValue("event.information-bar", null)) {
-					navsounds.playSound(navsounds.getSystemSound("Explorer", "SecurityBand"));
-				}
+				navsounds.playEvent("information-bar");
 			}
 		}
 	} catch(ex) {
@@ -525,10 +530,8 @@ function _navsounds_browserTabSelect(e) {
 	try {
 		// Changed tab: re-notify for search providers.
 		var tabBrowser = getBrowser();
-		if (navsounds.prefs.getValue("event.discover-search-provider", null)) {
-			if (tabBrowser.selectedBrowser.engines && tabBrowser.selectedBrowser.engines.length > 0) {
-				navsounds.playSound(navsounds.getSystemSound("Explorer", "SearchProviderDiscovered"));
-			}
+		if (tabBrowser.selectedBrowser.engines && tabBrowser.selectedBrowser.engines.length > 0) {
+			navsounds.playEvent("discover-search-provider");
 		}
 	} catch(ex) {
 		navsounds.reportError("navsounds.browserTabSelect", ex);
@@ -543,15 +546,11 @@ function _navsounds_browserPageShow(e) {
 		// Page show: only if active tab, notify feeds and search providers.
 		if (e.originalTarget == content.document) {
 			var tabBrowser = getBrowser();
-			if (navsounds.prefs.getValue("event.discover-feed", null)) {
-				if (tabBrowser.selectedBrowser.feeds && tabBrowser.selectedBrowser.feeds.length > 0) {
-					navsounds.playSound(navsounds.getSystemSound("Explorer", "FeedDiscovered"));
-				}
+			if (tabBrowser.selectedBrowser.feeds && tabBrowser.selectedBrowser.feeds.length > 0) {
+				navsounds.playEvent("discover-feed");
 			}
-			if (navsounds.prefs.getValue("event.discover-search-provider", null)) {
-				if (tabBrowser.selectedBrowser.engines && tabBrowser.selectedBrowser.engines.length > 0) {
-					navsounds.playSound(navsounds.getSystemSound("Explorer", "SearchProviderDiscovered"));
-				}
+			if (tabBrowser.selectedBrowser.engines && tabBrowser.selectedBrowser.engines.length > 0) {
+				navsounds.playEvent("discover-search-provider");
 			}
 		}
 	} catch(ex) {
