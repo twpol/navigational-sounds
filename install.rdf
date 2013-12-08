@@ -6,6 +6,7 @@
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 	<Description about="urn:mozilla:install-manifest">
 		<!-- Core data -->
+		<em:type>2</em:type>
 		<em:id>{d84a846d-f7cb-4187-a408-b171020e8940}</em:id>
 		<em:version>1.2.4</em:version>
 		
@@ -25,12 +26,5 @@
 		
 		<!-- Entry points -->
 		<em:optionsURL>chrome://navsounds/content/prefs.xul</em:optionsURL>
-		
-		<!-- Package files -->
-		<em:file>
-			<Description about="urn:mozilla:extension:file:navsounds">
-				<em:package>content/</em:package>
-			</Description>
-		</em:file>
 	</Description>
 </RDF>
