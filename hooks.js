@@ -14,14 +14,22 @@
 
 
 var navsounds = new Object();
-navsounds.debug = false;
+navsounds.debug = true;
 navsounds.debugDepth = "";
 navsounds.debugLastFn = "";
 navsounds.id = "{d84a846d-f7cb-4187-a408-b171020e8940}";
 
 navsounds.ROOT_KEY_CURRENT_USER = Components.interfaces.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER;
 navsounds.ROOT_KEY_LOCAL_MACHINE = Components.interfaces.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE;
+// nsIDownloadManager [Firefox 3-25]
 navsounds.DOWNLOAD_FINISHED = Components.interfaces.nsIDownloadManager.DOWNLOAD_FINISHED;
+
+try {
+	// Components.utils.import [Firefox 3+]
+	// resource://gre/modules/Downloads.jsm [Firefox 26+]
+	Components.utils.import("resource://gre/modules/Downloads.jsm");
+} catch(ex) {
+}
 
 navsounds.newObject =
 function _navsounds_newObject(contractID, iface) {
@@ -107,20 +115,28 @@ function _navsounds_initComplete(extensions) {
 		navsounds.prefs = extensions.get(navsounds.id).prefs;
 		navsounds.env   = navsounds.getService("@mozilla.org/process/environment;1", "nsIEnvironment");
 		navsounds.io    = navsounds.getService("@mozilla.org/network/io-service;1", "nsIIOService");
-		navsounds.dlm   = navsounds.getService("@mozilla.org/download-manager;1", "nsIDownloadManager");
+		// Downloads [Firefox 26+]
+		// @mozilla.org/download-manager;1 [Firefox 3-25]
+		navsounds.dlm   = typeof Downloads != 'undefined' ? Downloads : navsounds.getService("@mozilla.org/download-manager;1", "nsIDownloadManager");
 		navsounds.sound = navsounds.getService("@mozilla.org/sound;1", "nsISound");
 		if (typeof getBrowser == "function") {
 			navsounds.bsHandler = new navsounds.BrowserStatusHandler();
 			navsounds.dlmHandler = new navsounds.DownloadManagerListener();
 			navsounds.blockedPopup = false;
 			var tabBrowser = getBrowser();
-			tabBrowser.addProgressListener(navsounds.bsHandler, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+			tabBrowser.addProgressListener(navsounds.bsHandler);
 			tabBrowser.addEventListener("DOMContentLoaded", navsounds.browserDOMContentLoaded, true);
 			tabBrowser.addEventListener("DOMPopupBlocked", navsounds.browserDOMPopupBlocked, true);
 			tabBrowser.addEventListener("AlertActive", navsounds.browserAlertActive, true);
 			tabBrowser.addEventListener("TabSelect", navsounds.browserTabSelect, true);
 			tabBrowser.addEventListener("pageshow", navsounds.browserPageShow, true);
-			navsounds.dlm.addListener(navsounds.dlmHandler);
+			if (navsounds.dlm.getList) {
+				navsounds.dlm.getList(navsounds.dlm.ALL).then(function _navsounds_initComplete_getList(list) {
+					list.addView(navsounds.dlmHandler);
+				}).then(null, Components.utils.reportError);
+			} else {
+				navsounds.dlm.addListener(navsounds.dlmHandler);
+			}
 		}
 	} catch(ex) {
 		navsounds.reportError("navsounds.initComplete", ex);
@@ -390,6 +406,35 @@ navsounds.DownloadManagerListener =
 function _navsounds_dlm() {
 }
 
+// onDownloadChanged [Downloads]
+navsounds.DownloadManagerListener.prototype.onDownloadChanged =
+function _navsounds_dlm_onDownloadChanged(download) {
+	navsounds.debugLogEnter("onDownloadChanged(" + download.succeeded + ")");
+	try {
+		if (download.succeeded) {
+			if (navsounds.prefs.getValue("event.download-complete", null)) {
+				navsounds.dlm.getList(navsounds.dlm.ALL).then(function _navsounds_dlm_onDownloadChanged_getList(list) {
+					return list.getAll();
+				}).then(function _navsounds_dlm_onDownloadChanged_getAll(list) {
+					var running = 0;
+					for (var i = 0; i < list.length; i++) {
+						if (!list[i].stopped) {
+							running++;
+						}
+					}
+					if (!navsounds.prefs.getValue("event.download-complete.only-last", null) || running == 0) {
+						navsounds.playSound(navsounds.getSystemSound(".Default", "SystemAsterisk"));
+					}
+				}).then(null, Components.utils.reportError);
+			}
+		}
+	} catch(ex) {
+		navsounds.reportError("navsounds.DownloadManagerListener.onDownloadChanged", ex);
+	}
+	navsounds.debugLogLeave();
+}
+
+// onDownloadStateChange [nsIDownloadManager]
 navsounds.DownloadManagerListener.prototype.onDownloadStateChange =
 function _navsounds_dlm_onDownloadStateChange(oldState, download) {
 	navsounds.debugLogEnter("onDownloadStateChange(" + oldState + " => " + download.state + ")");
@@ -411,8 +456,11 @@ function _navsounds_dlm_onDownloadStateChange(oldState, download) {
 	navsounds.debugLogLeave();
 }
 
+// onStateChange [nsIDownloadManager]
 navsounds.DownloadManagerListener.prototype.onStateChange =
+// onProgressChange [nsIDownloadManager]
 navsounds.DownloadManagerListener.prototype.onProgressChange =
+// onSecurityChange [nsIDownloadManager]
 navsounds.DownloadManagerListener.prototype.onSecurityChange =
 function _navsounds_dlm_noop() {
 }
