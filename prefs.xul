@@ -18,42 +18,54 @@
       <preference id="event.download-complete" name="extensions.{d84a846d-f7cb-4187-a408-b171020e8940}.event.download-complete" type="bool"/>
       <preference id="event.download-complete.only-last" name="extensions.{d84a846d-f7cb-4187-a408-b171020e8940}.event.download-complete.only-last" type="bool"/>
     </preferences>
-    <label value="Play Windows Sounds for:"/>
     <grid>
       <columns>
+        <column/>
         <column/>
         <column/>
       </columns>
       <rows>
         <row>
+          <label value="Play Windows Sounds for:"/>
+          <label/>
+          <label class="text-link open-control-panel" value="Location in Control Panel Sounds:"/>
+        </row>
+        <row align="center">
           <checkbox preference="event.navigation-start" label="Start Navigation"/>
           <button label="Test" class="sound-test" sound-app="Explorer" sound-name="Navigating"/>
+          <label class="explorer" value="{{explorer}} > Start Navigation"/>
         </row>
-        <row>
+        <row align="center">
           <checkbox preference="event.navigation-complete" label="Complete Navigation"/>
           <button label="Test" class="sound-test" sound-app="Explorer" sound-name="ActivatingDocument"/>
+          <label class="explorer" value="{{explorer}} > Complete Navigation"/>
         </row>
-        <row>
+        <row align="center">
           <checkbox preference="event.block-popup" label="Blocked Pop-up Window"/>
           <button label="Test" class="sound-test" sound-app="Explorer" sound-name="BlockedPopup"/>
+          <label class="explorer" value="{{explorer}} > Blocked Pop-up Window"/>
         </row>
-        <row>
+        <row align="center">
           <checkbox preference="event.information-bar" label="Information Bar"/>
           <button label="Test" class="sound-test" sound-app="Explorer" sound-name="SecurityBand"/>
+          <label class="explorer" value="{{explorer}} > Notification bar"/>
         </row>
-        <row>
+        <row align="center">
           <checkbox preference="event.discover-feed" label="Feed Discovered"/>
           <button label="Test" class="sound-test" sound-app="Explorer" sound-name="FeedDiscovered"/>
+          <label class="explorer" value="{{explorer}} > Feed Discovered"/>
         </row>
-        <row>
+        <row align="center">
           <checkbox preference="event.discover-search-provider" label="Search Provider Discovered"/>
           <button label="Test" class="sound-test" sound-app="Explorer" sound-name="SearchProviderDiscovered"/>
+          <label class="explorer" value="{{explorer}} > Search Provider Discovered"/>
         </row>
-        <row>
+        <row align="center">
           <checkbox preference="event.download-complete" label="Download Completed"/>
           <button label="Test" class="sound-test" sound-app=".Default" sound-name="SystemAsterisk"/>
+          <label value="Windows > Asterisk"/>
         </row>
-        <row>
+        <row align="center">
           <checkbox preference="event.download-complete.only-last" label="Only last active download" style="margin-left: 2em;"/>
         </row>
       </rows>
