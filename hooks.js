@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// Navigational Sounds extension (http://twpol.dyndns.org/projects/navsounds/).
+// Navigational Sounds extension (http://james-ross.co.uk/projects/navsounds/).
 // License: New BSD License (BSD).
 //------------------------------------------------------------------------------
 
